@@ -1,0 +1,106 @@
+spg Design Notes
+
+* Overview
+
+spg provides two command line binaries that allow you to encrypt and decrypt a
+message.
+
+Usage:
+$ spgencrypt -k {key} -m {message}
+$ spgdecrypt -k {key}
+
+* Requirements
+
+- encrypt binary takes a key and a message
+- on success, encrypt binary prints a message reporting success
+- decrypt binary only takes a key
+- on success, decrypt binary prints plaintext message
+- on failure, decrypt binary prints error message (e.g. wrong key)
+- cryptographic procedures are shared via a shared library
+- symmetric key
+
+* Goal and Non-goals
+
+- Goal: Windows and Linux environments
+- Goal: Remain secure and make encryption, decryption very easy
+- Goal: Reach a YES/NO/HALT quickly.
+- Non-goal: Hardware speedups e.g. SSE3. These tie us to a platform.
+- Non-goal: MacOS target. Lack of resources around Apple APIs.
+
+* Design
+
+** Shared library, spg
+
+This is a wrapper library to whatever cryptography library we intend to use.
+
+Unit tests are really just to ensure the API remains the same.
+
+API:
+class Crypt;      // interface
+class FakeCrypt;  // for testing
+class TinkCrypt;  // wrapper around real implementation
+
+*** Crypt interface
+
+class Crypt {
+ public:
+  virtual std::optional<std::string> Encrypt(absl::string_view key,
+  	  	      	                     absl::string_view plaintext) = 0;
+  virtual std::optional<std::string> Decrypt(absl::string_view key,
+                                             absl::string_view ciphertext) = 0;
+};
+
+*** FakeCrypt
+
+We'll just add the key into plaintext to ensure the test returns an answer
+quickly.
+
+(Q for reviewer): Is this safe?
+
+*** TinkCrypt
+
+We are using Google Tink for cryptographic primtiives. Alternatives considered
+were libsodium, OpenSSL.
+
+Entirely removed OpenSSL from the getgo because of how complex the interface is.
+In case communication happens over sockets, we'll come back to OpenSSL.
+
+libsodium was the initial choice but it remains pretty complex and easy to
+misuse. The error scenario here is in the case that a developer just wants to
+ship something, they might overlook securing additional data for AEAD.
+
+Google Tink is relatively new and folks on online threads seem excited about it.
+However, because it is young, it hasn't been tested publically as much.
+We should be wary that we might need to swap Google Tink out ASAP if someone
+finds a vulnerability.
+
+To ensure we are using federally validated cryptographic primitives within Tink,
+we'll invoke `crypto::tink::RestrictToFips()` at the library level.
+
+(Q for reviewer): Do you think this is an okay decision?
+
+** CLI programs, spg[encrypt/decrypt]
+
+Going forward, when we say `binaries` we are referring to these two CLI programs.
+
+The encrypt binary takes a key and message and produce a file with the encrypted
+message.
+
+The decrypt binary takes a key and scans the existing directory for all files
+that could have been encrypted by this key. If it finds only one match, it'll
+decrypt that one match. If it finds multiple matches, it'll decrypt the youngest
+file (as recorded by the operating system inode timestamp of last touch).
+
+*** interactive mode
+
+If a user is concerned someone may see the message they type, the user can run
+the commands without any input to enter interactive mode.
+
+Example:
+$ spgencrypt
+Key: *****
+Message: *****
+DONE.
+$ spgdecrypt
+Key: *****
+<Output>

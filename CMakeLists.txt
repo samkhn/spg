@@ -25,7 +25,6 @@ if(NOT googletest_POPULATED)
   add_subdirectory(${tink_SOURCE_DIR} ${tink_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif()
 
-
 FetchContent_Declare(googletest
   GIT_REPOSITORY https://github.com/google/googletest.git
   GIT_TAG v1.13.0
@@ -37,22 +36,49 @@ enable_testing()
 include(GoogleTest)
 
 # Main project targets
+# TODO(refactor): We are duplicating the compile_options flags. Let's move into a variable.
 
-# spgencrypt is a wrapper library around Google Tink (in case it comes out that Tink is insecure or doesn't pass client testing/requirements, we can swap it).
-add_library(spgencrypt STATIC src/encrypt.cpp include/encrypt.hpp)
+# crypt - interface for crypt wrappers to implement
+add_library(crypt INTERFACE)
+target_include_directories(crypt INTERFACE include)
+
+# fakecrypt - used in unit tests of crypt implementors
+add_library(fakecrypt STATIC src/testing/fakecrypt.cpp include/testing/fakecrypt.hpp)
 if (MSVC)
-  target_compile_options(spgencrypt PUBLIC "/W4 /w14640")
+  target_compile_options(fakecrypt PUBLIC "/W4 /w14640")
 else()
-  target_compile_options(spgencrypt PUBLIC "-Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic")
+  target_compile_options(fakecrypt PUBLIC "-Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic")
 endif()
+target_include_directories(fakecrypt PUBLIC include PRIVATE src)
+target_link_libraries(fakecrypt crypt)
 
-target_include_directories(spgencrypt PUBLIC include PRIVATE src)
-target_link_libraries(spgencrypt tink::static)
+# tinkcrypt - wrapper around Google Tink
+add_library(tinkcrypt STATIC src/tinkcrypt.cpp include/tinkcrypt.hpp)
+if (MSVC)
+  target_compile_options(tinkcrypt PUBLIC "/W4 /w14640")
+else()
+  target_compile_options(tinkcrypt PUBLIC "-Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic")
+endif()
+target_include_directories(tinkcrypt PUBLIC include PRIVATE src)
+target_link_libraries(tinkcrypt crypt tink::static)
 
-add_executable(encrypt_test test/encrypt_test.cpp)
-target_link_libraries(encrypt_test GTest::gtest_main spgencrypt)
+# crypt_test - unit test for crypt library
+add_executable(crypt_test test/crypt_test.cpp)
+target_include_directories(crypt_test PUBLIC include PRIVATE src)
+target_link_libraries(crypt_test GTest::gtest_main fakecrypt)
+
+# TODO: sgencrypt binary
+# TODO: sgencrypt_it script
+# TODO: sgdecrypt binary
+# TODO: sgdecrypt_it script
+
+# REACH TODOs
+# TODO: context library (for determining if Win or Linux)
+#  Used to cli library and binaries to determine where "HOME" is.
+# TODO: flags library (used by command line)
+# TODO: context/cli library (used by interactive mode)
 
 # All target. So you can run: cmake --build $BUILD_DIR --target check-all
 add_custom_target(check-all
-  DEPENDS encrypt_test COMMAND $<TARGET_FILE:encrypt_test>
+  DEPENDS encrypt_test COMMAND $<TARGET_FILE:crypt_test>
 )
