@@ -38,7 +38,7 @@ Unit tests are really just to ensure the API remains the same.
 API:
 class Crypt;      // interface
 class FakeCrypt;  // for testing
-class TinkCrypt;  // wrapper around real implementation
+class SodiumCrypt;  // wrapper around real implementation
 
 *** Crypt interface
 
@@ -57,25 +57,9 @@ quickly.
 
 (Q for reviewer): Is this safe?
 
-*** TinkCrypt
+*** SodiumCrypt
 
-We are using Google Tink for cryptographic primtiives. Alternatives considered
-were libsodium, OpenSSL.
-
-Entirely removed OpenSSL from the getgo because of how complex the interface is.
-In case communication happens over sockets, we'll come back to OpenSSL.
-
-libsodium was the initial choice but it remains pretty complex and easy to
-misuse. The error scenario here is in the case that a developer just wants to
-ship something, they might overlook securing additional data for AEAD.
-
-Google Tink is relatively new and folks on online threads seem excited about it.
-However, because it is young, it hasn't been tested publically as much.
-We should be wary that we might need to swap Google Tink out ASAP if someone
-finds a vulnerability.
-
-To ensure we are using federally validated cryptographic primitives within Tink,
-we'll invoke `crypto::tink::RestrictToFips()` at the library level.
+We are using libsodium for our cryptographic primitives.
 
 (Q for reviewer): Do you think this is an okay decision?
 

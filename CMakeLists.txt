@@ -10,30 +10,28 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include(FetchContent)
 
-# Dependencies: Google Test and Google Tink
+# Dependencies: Google Test and libsodium
+# Google Test will be downloaded when you initially configure this project
+# if it's not available on your machine.
+# libsodium is expected to be installed on your machine (no download)
 
-FetchContent_Declare(tink
-  URL       https://github.com/tink-crypto/tink-cc/archive/refs/tags/v2.0.0.zip
-  URL_HASH  SHA256=103ddfce800e77f3b3b6b2c808a8611bc734b31ddb12fbcfd8bebc1b96a7e963
-)
-# Google Tink transitively pulls in Google Abseil, protobuf, BoringSSL, rapidjson
-set(ABSL_PROPAGATE_CXX_STD ON)
+set (CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-FetchContent_GetProperties(tink)
-if(NOT googletest_POPULATED)
-  FetchContent_Populate(tink)
-  add_subdirectory(${tink_SOURCE_DIR} ${tink_BINARY_DIR} EXCLUDE_FROM_ALL)
+enable_testing()
+find_package(GTest REQUIRED)
+
+if(NOT GTest_FOUND)
+  FetchContent_Declare(googletest
+    GIT_REPOSITORY https://github.com/google/googletest.git
+    GIT_TAG v1.13.0
+    DOWNLOAD_EXTRACT_TIMESTAMP true
+  )
+  set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+  FetchContent_MakeAvailable(googletest)
+  include(GoogleTest)
 endif()
 
-FetchContent_Declare(googletest
-  GIT_REPOSITORY https://github.com/google/googletest.git
-  GIT_TAG v1.13.0
-  DOWNLOAD_EXTRACT_TIMESTAMP true
-)
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(googletest)
-enable_testing()
-include(GoogleTest)
+find_package(Sodium REQUIRED)
 
 # Main project targets
 # TODO(refactor): We are duplicating the compile_options flags. Let's move into a variable.
@@ -45,22 +43,22 @@ target_include_directories(crypt INTERFACE include)
 # fakecrypt - used in unit tests of crypt implementors
 add_library(fakecrypt STATIC src/testing/fakecrypt.cpp include/testing/fakecrypt.hpp)
 if (MSVC)
-  target_compile_options(fakecrypt PUBLIC "/W4 /w14640")
+  target_compile_options(fakecrypt PUBLIC /W4 /w14640)
 else()
-  target_compile_options(fakecrypt PUBLIC "-Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic")
+  target_compile_options(fakecrypt PUBLIC -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic)
 endif()
 target_include_directories(fakecrypt PUBLIC include PRIVATE src)
 target_link_libraries(fakecrypt crypt)
 
-# tinkcrypt - wrapper around Google Tink
-add_library(tinkcrypt STATIC src/tinkcrypt.cpp include/tinkcrypt.hpp)
+# naclcrypt - wrapper around libsodium
+add_library(sodiumcrypt STATIC src/sodiumcrypt.cpp include/sodiumcrypt.hpp)
 if (MSVC)
-  target_compile_options(tinkcrypt PUBLIC "/W4 /w14640")
+  target_compile_options(sodiumcrypt PUBLIC /W4 /w14640)
 else()
-  target_compile_options(tinkcrypt PUBLIC "-Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic")
+  target_compile_options(sodiumcrypt PUBLIC -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic)
 endif()
-target_include_directories(tinkcrypt PUBLIC include PRIVATE src)
-target_link_libraries(tinkcrypt crypt tink::static)
+target_include_directories(sodiumcrypt PUBLIC include PRIVATE src)
+target_link_libraries(sodiumcrypt sodium crypt)
 
 # crypt_test - unit test for crypt library
 add_executable(crypt_test test/crypt_test.cpp)
@@ -80,5 +78,5 @@ target_link_libraries(crypt_test GTest::gtest_main fakecrypt)
 
 # All target. So you can run: cmake --build $BUILD_DIR --target check-all
 add_custom_target(check-all
-  DEPENDS encrypt_test COMMAND $<TARGET_FILE:crypt_test>
+  DEPENDS crypt_test COMMAND $<TARGET_FILE:crypt_test>
 )
