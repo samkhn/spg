@@ -1,6 +1,8 @@
-#include <sodium.h>
+// TODO(correctness): we are zeroing the nonce. Is that okay?
 
 #include "sodiumcrypt.hpp"
+
+#include <sodium.h>
 
 using ::SPG::Crypt::SodiumCrypt;
 
