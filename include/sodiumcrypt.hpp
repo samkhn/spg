@@ -2,7 +2,6 @@
 #define SPG_CRYPT_SODIUMCRYPT
 
 #include <memory>
-#include <sodium.h>
 
 #include "crypt.hpp"
 
@@ -13,10 +12,10 @@ namespace Crypt {
 class SodiumCrypt : public Crypt {
  public:
   static std::unique_ptr<SodiumCrypt> ConstructCrypt();
-  std::optional<std::string> Encrypt(std::string_view key,
-                                     std::string_view plaintext) override;
-  std::optional<std::string> Decrypt(std::string_view key,
-                                     std::string_view ciphertext) override;
+  std::optional<ByteVector> Encrypt(const ByteVector& key,
+                                    const ByteVector& plaintext) override;
+  std::optional<ByteVector> Decrypt(const ByteVector& key,
+                                    const ByteVector& ciphertext) override;
 
  private:
   SodiumCrypt() = default;

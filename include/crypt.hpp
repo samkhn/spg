@@ -2,8 +2,13 @@
 #define SPG_CRYPT_CRYPT
 
 #include <optional>
-#include <string>
-#include <string_view>
+#include <vector>
+
+namespace {
+
+using ByteVector = std::vector<unsigned char>;
+
+};  // namespace
 
 namespace SPG {
 namespace Crypt {
@@ -13,10 +18,10 @@ namespace Crypt {
 // data.
 class Crypt {
  public:
-  virtual std::optional<std::string> Encrypt(std::string_view key,
-                                             std::string_view plaintext) = 0;
-  virtual std::optional<std::string> Decrypt(std::string_view key,
-                                             std::string_view ciphertext) = 0;
+  virtual std::optional<ByteVector> Encrypt(const ByteVector& key,
+                                            const ByteVector& plaintext) = 0;
+  virtual std::optional<ByteVector> Decrypt(const ByteVector& key,
+                                            const ByteVector& ciphertext) = 0;
   // Empty implementation so that all derived implementations have destructors
   // (especially inside unique_ptrs).
   virtual ~Crypt(){};

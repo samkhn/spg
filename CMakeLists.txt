@@ -26,10 +26,10 @@ if(NOT GTest_FOUND)
     GIT_TAG v1.13.0
     DOWNLOAD_EXTRACT_TIMESTAMP true
   )
-  set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
   FetchContent_MakeAvailable(googletest)
   include(GoogleTest)
 endif()
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
 find_package(Sodium REQUIRED)
 
@@ -57,13 +57,18 @@ if (MSVC)
 else()
   target_compile_options(sodiumcrypt PUBLIC -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic)
 endif()
-target_include_directories(sodiumcrypt PUBLIC include PRIVATE src)
+target_include_directories(sodiumcrypt PUBLIC include sodium_INCLUDE_DIR PRIVATE src)
 target_link_libraries(sodiumcrypt sodium crypt)
 
-# crypt_test - unit test for crypt library
+# crypt_test - unit test for crypt interface library
 add_executable(crypt_test test/crypt_test.cpp)
 target_include_directories(crypt_test PUBLIC include PRIVATE src)
 target_link_libraries(crypt_test GTest::gtest_main fakecrypt)
+
+# sodiumcrypt_test - unit test for the sodium wrapper library
+add_executable(sodiumcrypt_test test/sodiumcrypt_test.cpp)
+target_include_directories(sodiumcrypt_test PUBLIC include PRIVATE src)
+target_link_libraries(sodiumcrypt_test GTest::gtest_main sodiumcrypt)
 
 # TODO: sgencrypt binary
 # TODO: sgencrypt_it script
@@ -79,4 +84,5 @@ target_link_libraries(crypt_test GTest::gtest_main fakecrypt)
 # All target. So you can run: cmake --build $BUILD_DIR --target check-all
 add_custom_target(check-all
   DEPENDS crypt_test COMMAND $<TARGET_FILE:crypt_test>
+  DEPENDS sodiumcrypt_test COMMAND $<TARGET_FILE:sodiumcrypt_test>
 )

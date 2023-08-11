@@ -12,6 +12,7 @@ BUILD_DIR=$HOME/build/$PROJECT_DIR
 if [ ! -d "$BUILD_DIR" ]; then
 	mkdir -p $BUILD_DIR
 	cmake -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ \
+	      -DCMAKE_BUILD_TYPE=Debug \
 	      -B $BUILD_DIR -G Ninja \
 	      -S $SOURCE_DIR
 fi
