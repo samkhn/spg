@@ -6,6 +6,7 @@
 
 namespace {
 
+// TODO(optimization): benchmark this against std::array
 using ByteVector = std::vector<unsigned char>;
 
 };  // namespace
