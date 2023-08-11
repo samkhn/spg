@@ -35,7 +35,7 @@ std::optional<ByteVector> SodiumCrypt::Decrypt(const ByteVector& key,
                                                const ByteVector& ciphertext) {
   unsigned long long plaintext_length;
   ByteVector plaintext;
-  plaintext.resize(ciphertext.size() -
+  plaintext.resize(ciphertext.size() +
                    crypto_aead_chacha20poly1305_IETF_ABYTES);
   ByteVector nonce(crypto_aead_chacha20poly1305_IETF_NPUBBYTES, '0');
   ByteVector processed_key(crypto_aead_chacha20poly1305_IETF_KEYBYTES, '0');

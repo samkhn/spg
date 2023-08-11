@@ -17,4 +17,4 @@ if [ ! -d "$BUILD_DIR" ]; then
 	      -S $SOURCE_DIR
 fi
 
-cmake --build $BUILD_DIR --target check-all
+cmake --build $BUILD_DIR --target integration_test

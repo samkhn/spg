@@ -4,10 +4,11 @@
 #include <optional>
 #include <vector>
 
+#include "lib/byte_vector.hpp"
+
 namespace {
 
-// TODO(optimization): benchmark this against std::array
-using ByteVector = std::vector<unsigned char>;
+using ::SPG::Crypt::Lib::ByteVector;
 
 };  // namespace
 
