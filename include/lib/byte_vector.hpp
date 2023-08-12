@@ -2,8 +2,8 @@
 #define SPG_CRYPT_LIB_BYTEVECTOR
 
 #include <iostream>
-#include <vector>
 #include <string_view>
+#include <vector>
 
 namespace SPG {
 namespace Crypt {

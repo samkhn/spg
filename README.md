@@ -27,6 +27,10 @@ $ cmake -B build -S .
 $ spgencrypt -k {key} -m {message}
 $ spgdecrypt -k {key}
 ```
+Note:
+
+* these arguments are required
+* uses ChaCha20 under the hood so: key must be representable within 32 bytes, message cannot exceed 256 GiB
 
 ## Contributing
 
@@ -43,6 +47,7 @@ $ # or if you just want to run integration tests: cmake --build $BUILD_DIR --tar
 
 ### Future plans
 
+* nonce support
 * Internal key management
 * Multiple messages decrypt support
 * Support for more cryptographic primitives (just libsodium at the moment).

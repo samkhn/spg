@@ -1,7 +1,7 @@
+#include "sodiumcrypt.hpp"
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-
-#include "sodiumcrypt.hpp"
 
 using ::SPG::Crypt::Crypt;
 using ::SPG::Crypt::SodiumCrypt;
