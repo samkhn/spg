@@ -26,7 +26,7 @@ std::optional<ByteVector> SodiumCrypt::Encrypt(const ByteVector& key,
           ciphertext.data(), &ciphertext_length, plaintext.data(),
           plaintext.size(), NULL, 0, NULL, nonce.data(),
           processed_key.data()) == 0) {
-    return ciphertext;
+    return ByteVector(ciphertext.begin(), ciphertext.begin() + ciphertext_length);
   }
   return std::nullopt;
 }
@@ -44,7 +44,7 @@ std::optional<ByteVector> SodiumCrypt::Decrypt(const ByteVector& key,
           plaintext.data(), &plaintext_length, NULL, ciphertext.data(),
           ciphertext.size(), NULL, 0, nonce.data(),
           processed_key.data()) == 0) {
-    return plaintext;
+    return ByteVector(plaintext.begin(), plaintext.begin() + plaintext_length);
   }
   return std::nullopt;
 }

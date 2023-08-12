@@ -77,7 +77,7 @@ def execute(t, encrypt_binary, decrypt_binary):
   got = {"stdout": ""}
   for c in t.commands:
     encrypt_call_args = [
-        encrypt_binary, "-k", c.encrypt_key, "-m", c.encrypt_message
+      encrypt_binary, "-k", c.encrypt_key, "-m", c.encrypt_message
     ]
     decrypt_call_args = [decrypt_binary, "-k", c.decrypt_key]
     print(f"Calling encrypt: {encrypt_call_args}.")
@@ -85,7 +85,13 @@ def execute(t, encrypt_binary, decrypt_binary):
     got["stdout"] += encrypt_call.stdout.decode()
     print(f"Calling decrypt: {decrypt_call_args}")
     decrypt_call = subprocess.run(decrypt_call_args, capture_output=True)
-    got["stdout"] += decrypt_call.stdout.decode()
+    # TODO: this exception is thrown when trying to decode the hex dump
+    # of the ciphertext as UTF8 hence we simply just store the word hex
+    # for now.
+    try:
+      got["stdout"] += decrypt_call.stdout.decode()
+    except UnicodeDecodeError as e:
+      got["stdout"] += "hex"
     if (encrypt_call.returncode == 0):
       generated_files = [
           f for f in os.listdir(Path(encrypt_binary).parent)
@@ -96,9 +102,6 @@ def execute(t, encrypt_binary, decrypt_binary):
           try:
             got[f] = open(f, "r").read()
           except UnicodeDecodeError as e:
-            # TODO: this exception is thrown when trying to decode the hex dump
-            # of the ciphertext as UTF8 hence we simply just store the word hex
-            # for now.
             got[f] = "hex"
   got_fileset = set(got.keys())
   for want_f, want_list in t.want.items():

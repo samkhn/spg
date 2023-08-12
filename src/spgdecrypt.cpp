@@ -54,20 +54,20 @@ int main(int argc, char** argv) {
   }
   for (const auto& spg_file : spg_files) {
     std::ifstream cipherfile;
-    cipherfile.open(spg_file, std::ios::binary);
+    cipherfile.open(spg_file);
     ByteVector message;
     cipherfile >> message;
     auto decrypted_message = crypt_module->Decrypt(key, message);
     if (decrypted_message.has_value()) {
-      std::cout << decrypted_message.value();
+      std::cout << decrypted_message.value() << '\n';
       decrypted_message_count += 1;
     }
     cipherfile.close();
   }
   if (decrypted_message_count == 0) {
-    std::cout << "Failed to decrypt messages\n";
+    std::cout << "Failed to decrypt\n";
     return -1;
   }
-  std::cout << "Decrypted " << decrypted_message_count << " message\n";
+  std::cout << "Decrypted " << decrypted_message_count << " ciphers\n";
   return 0;
 }

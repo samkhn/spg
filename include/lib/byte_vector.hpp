@@ -28,8 +28,9 @@ inline ByteVector FromString(std::string_view s) {
 inline std::istream& operator>>(std::istream& in,
                                 ::SPG::Crypt::Lib::ByteVector& bv) {
   ::SPG::Crypt::Lib::Byte b;
-  in >> b;
-  bv.push_back(b);
+  while (in >> b) {
+    bv.push_back(b);
+  }
   return in;
 }
 

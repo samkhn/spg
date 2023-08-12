@@ -6,7 +6,6 @@
 using ::SPG::Crypt::Crypt;
 using ::SPG::Crypt::SodiumCrypt;
 using ::testing::ContainerEq;
-using ::testing::ElementsAre;
 
 TEST(SodiumCryptTest, EncryptAndDecryptAMessage) {
   std::unique_ptr<Crypt> crypt_module = SodiumCrypt::ConstructCrypt();
@@ -18,7 +17,7 @@ TEST(SodiumCryptTest, EncryptAndDecryptAMessage) {
   EXPECT_NE(encrypt_result.value().size(), 0);
   auto decrypt_result = crypt_module->Decrypt(key, encrypt_result.value());
   ASSERT_TRUE(decrypt_result.has_value());
-  EXPECT_THAT(decrypt_result.value(), ContainerEq(message));
+  EXPECT_THAT(decrypt_result.value(), testing::ContainerEq(message));
 }
 
 TEST(SodiumCryptTest, ReturnsNothingOnDecryptError) {
